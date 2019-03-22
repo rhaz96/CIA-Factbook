@@ -1,3 +1,14 @@
+---
+title: "Analyzing CIA Factbook Data"
+author: "Robert Hazell"
+date: "3/21/2019"
+output: 
+  html_document:
+    keep_md: true
+---
+
+
+
 ### Introduction
 
 Often times, SQL is used as a stand-alone tool, but databases can be imported into R to harness the power of its visualization and efficiency with the ```tidyverse```.  Now we can take advantage of ```ggplot2```, ```stringr```, and ```lubridate```, as well as the SQL-like syntax of ```dplyr```.  More advanced queries are actually easier with ```dplyr```.  
@@ -15,6 +26,9 @@ The data can be found from this [Github repo](https://github.com/factbook/factbo
 
 ```r
 library(RSQLite)
+library(DBI)
+# the remaining packages can be found in the tidyverse package
+# this is an explicit listing
 library(tidyr)
 library(dplyr)
 library(dbplyr)
@@ -180,7 +194,7 @@ cia_db %>%
 20                                   Wake Island -2147483648
 ```
 
-Notice the ```population``` of 0 for Antartica.
+Notice the ```population``` of 0 for Antarctica.
 
 And now for the locations with missing ```population_growth```.
 
@@ -263,7 +277,7 @@ Several observations can be made:
 
 * ```birth_rate``` is mostly between 10 and 20 children per 1000 globally
 
-* ```death_rate``` is roughly symmetric at around 8 per 1000, though some locations are alarmingly higher.  We can see which locations have a death rate higer than 12 per 1000
+* ```death_rate``` is roughly symmetric at around 8 per 1000, though some locations are alarmingly higher.  We can see which locations have a death rate higher than 12 per 1000
 
 
 ```r
@@ -330,7 +344,7 @@ cia_db %>%
 ```
 
 This accords moderately well with the info from Wikipedia.  Have a look.
-![Alt text](/Users/roberthazell/Desktop/Dataquest/CIA-Factbook/density.png)
+![image](https://user-images.githubusercontent.com/43581750/54854107-3ea9db00-4cc8-11e9-80b6-6d714f3e7348.png)
 
 ### Conclusion
 

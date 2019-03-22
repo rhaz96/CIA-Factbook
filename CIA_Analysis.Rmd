@@ -175,7 +175,7 @@ cia_db %>%
 ```
 
 This accords moderately well with the info from Wikipedia.  Have a look.
-![Alt text](/Users/roberthazell/Desktop/Dataquest/CIA-Factbook/density.png)
+![image](https://user-images.githubusercontent.com/43581750/54854107-3ea9db00-4cc8-11e9-80b6-6d714f3e7348.png)
 
 ### Conclusion
 
