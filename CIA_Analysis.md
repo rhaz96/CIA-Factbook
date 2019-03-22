@@ -1,14 +1,3 @@
----
-title: "Analyzing CIA Factbook Data"
-author: "Robert Hazell"
-date: "3/21/2019"
-output: 
-  html_document:
-    keep_md: true
----
-
-
-
 ### Introduction
 
 Often times, SQL is used as a stand-alone tool, but databases can be imported into R to harness the power of its visualization and efficiency with the ```tidyverse```.  Now we can take advantage of ```ggplot2```, ```stringr```, and ```lubridate```, as well as the SQL-like syntax of ```dplyr```.  More advanced queries are actually easier with ```dplyr```.  
