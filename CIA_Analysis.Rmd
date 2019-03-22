@@ -1,0 +1,184 @@
+---
+title: "Analyzing CIA Factbook Data"
+author: "Robert Hazell"
+date: "3/21/2019"
+output: 
+  html_document:
+    keep_md: true
+---
+
+```{r include=FALSE} 
+knitr::opts_chunk$set(comment = NA, warning = FALSE, message = FALSE, options(scipen = 1000))
+```
+
+### Introduction
+
+Often times, SQL is used as a stand-alone tool, but databases can be imported into R to harness the power of its visualization and efficiency with the ```tidyverse```.  Now we can take advantage of ```ggplot2```, ```stringr```, and ```lubridate```, as well as the SQL-like syntax of ```dplyr```.  More advanced queries are actually easier with ```dplyr```.  
+
+On account of these advantages, this analysis entails importing a SQLite database and converting it to an R table for querying and analysis.  The data comes from the CIA World Factbook, a compendium of statistics about all of the countries on Earth. The Factbook contains demographic information like:
+
+* ```population``` - The population as of ```2015```
+* ```population_growth``` - The annual population growth, as a percentage
+* ```area``` - The total land and water area.
+
+The data can be found from this [Github repo](https://github.com/factbook/factbook.sql/releases)
+
+### Getting Started:
+
+```{r}
+library(RSQLite)
+library(DBI)
+# the remaining packages can be found in the tidyverse package
+# this is an explicit listing
+library(tidyr)
+library(dplyr)
+library(dbplyr)
+library(ggplot2)
+library(magrittr)
+library(purrr)
+library(stringr)
+```
+
+```{r}
+working_dir<- "/Users/roberthazell/Desktop/Dataquest/CIA-Factbook"
+setwd(working_dir)
+```
+
+Link the database once it's downloaded to a working directory.
+
+```{r}
+working_dir<- "/Users/roberthazell/Desktop/Dataquest/CIA-Factbook"
+setwd(working_dir)
+con <- DBI::dbConnect(RSQLite::SQLite(), dbname = paste(c(working_dir, "/factbook.db"), collapse = ''))
+```
+
+See the tables in ```con```.  The relevant table is ```facts```.
+
+```{r}
+dbListTables(con)
+```
+
+Now we can save this table to it's own variable ```cia_db```.
+
+```{r}
+# use tbl (required) to convert to tabular format
+# then convert to data frame
+cia_db <- tbl(con, "facts") %>% as.data.frame()
+```
+
+Here's the first 5 rows, to show it works:
+
+```{r}
+head(cia_db, 5)
+```
+
+Taking a look at the structure:
+
+```{r}
+str(cia_db)
+```
+
+The ```population``` column is of type integer64, which will cause problems when plotting.  To remedy, this'll be converted to a numeric type.
+
+```{r}
+cia_db$population %<>% as.numeric(.)
+class(cia_db$population)
+```
+
+### Summary Statistics
+
+Here's info on the minimum and maximum values each for population and population growth.
+
+```{r}
+cia_db %>% 
+  select(population, population_growth) %>% 
+  summarise('Min Population' = min(population),
+            'Max Population' = max(population),
+            'Min Population Growth' = min(population_growth),
+            'Max Population Growth' = max(population_growth))
+```
+
+Several curious features stand out.  There's a *negative* population value, and both the minimum and maximum population growth values are ```NA```.  This implies the presence of ```NA```s for the column ```population_growth```.  
+
+Let's see where the negative population location(s) is(are).
+
+```{r}
+cia_db %>% 
+  filter(population <= 0) %>% 
+  select(name, population) %>%
+  arrange(name)
+```
+
+Notice the ```population``` of 0 for Antarctica.
+
+And now for the locations with missing ```population_growth```.
+
+```{r}
+cia_db %>% filter(is.na(population_growth)) %>% select(name)
+```
+
+Also, what's that place with 7,256,490,011 people?  
+
+```{r}
+cia_db %>% filter(population == max(population)) %>% select(name, population)
+```
+
+### Histograms
+
+Before visualizing some key variables, let's eliminate any rows with ```NA``` and non-positive or 0 ```population``` values.  Also, ```World``` will be removed.
+
+```{r}
+cia_db %<>% filter(!(population < 0 | population == max(population)),
+                  complete.cases(.))
+```
+
+Now for the plots.
+
+```{r, results='hide'}
+# use results = 'hide' to remove consolt output ([[1]], etc)
+# create function to plot each histogram and format x axis
+plot_cia_var <- function(v) {
+  ggplot(cia_db) + 
+    geom_histogram(aes_string(v), fill = "blue") + 
+    xlab(gsub("_", " ", v) %>% str_to_title()) +
+    ylab("Number of Locations")
+}
+
+to_plot <- c("population", "population_growth", "birth_rate", "death_rate")
+map(to_plot, plot_cia_var)
+```
+
+Several observations can be made:
+
+* ```birth_rate``` is mostly between 10 and 20 children per 1000 globally
+
+* ```death_rate``` is roughly symmetric at around 8 per 1000, though some locations are alarmingly higher.  We can see which locations have a death rate higher than 12 per 1000
+
+```{r}
+cia_db %>% filter(death_rate > 12) %>% select(name, death_rate)
+```
+
+Many of these countries are in Africa or Eastern Europe.
+
+* ```population_growth``` is roughly between 0-150%, but a strong minority of countries are growing even faster
+
+### Exploring Population Density
+
+Population density is the ratio of population to land area.  We can compute this for each country and compare those results with [Wikipedia's](https://simple.wikipedia.org/wiki/List_of_countries_by_population_density).
+
+```{r}
+cia_db %>% 
+  mutate(`Population Density` = population/area_land) %>% 
+  arrange(desc(`Population Density`)) %>% 
+  select(name, `Population Density`) %>%
+  head(10)
+```
+
+This accords moderately well with the info from Wikipedia.  Have a look.
+![Alt text](/Users/roberthazell/Desktop/Dataquest/CIA-Factbook/density.png)
+
+### Conclusion
+
+This project examined some of the core variables of the CIA Factbook dataset, after cleaning data inconsistencies.  It demonstrates the elegance of ```dplyr``` syntax and it's semblance to SQL, as well as how to integrate databases into R/RStudio.
+
+
