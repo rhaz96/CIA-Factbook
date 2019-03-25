@@ -19,4 +19,4 @@ This exploratory data analysis is done in R, and it demonstrates (among other th
 
 The actual dataset is a .db file, so it's meant to be analyzed in SQL. However, R has wonderful extensions to popular databases like SQLite and Postgres.  Tables can be converted to data frames to take advantage of the ```dplyr``` package, as well as R's functionality in general.  We don't have to be confined to SQL's analytical and syntactical limitations.
 
-The packages in the ```tidyverse``` package are used, and can be found in the final report.  For more information on integrating R with SQL, check out this [article](https://db.rstudio.com/dplyr/) from RStudio
+The packages in the ```tidyverse``` package are used, and can be found in the final report.  For more information on integrating R with SQL, check out this [article](https://db.rstudio.com/dplyr/) from RStudio.
